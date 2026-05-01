@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+import platform
 
 def get_local_node_path():
     if hasattr(sys, '_MEIPASS'):
@@ -8,7 +9,12 @@ def get_local_node_path():
     else:
         base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
     
-    node_dir = os.path.join(base_dir, "node", "node-v20.10.0-win-x64")
+    system = platform.system()
+    if system == "Windows":
+        node_dir = os.path.join(base_dir, "node", "node-v20.10.0-win-x64")
+    else:
+        node_dir = os.path.join(base_dir, "node", "node-v20.10.0-linux-x64")
+    
     if os.path.exists(node_dir):
         return node_dir
     
@@ -38,7 +44,12 @@ def extract_pdf_content(pdf_path):
             print("ERROR: Local Node.js not found")
             return None
         
-        node_exe = os.path.join(node_path, "node.exe")
+        system = platform.system()
+        if system == "Windows":
+            node_exe = os.path.join(node_path, "node.exe")
+        else:
+            node_exe = os.path.join(node_path, "bin", "node")
+        
         if not os.path.exists(node_exe):
             print(f"ERROR: Node.js executable not found at {node_exe}")
             return None
@@ -51,7 +62,10 @@ def extract_pdf_content(pdf_path):
         cmd = [node_exe, mineru_script, "flash-extract", pdf_path]
         
         env = os.environ.copy()
-        env["PATH"] = node_path + os.pathsep + env["PATH"]
+        if system == "Windows":
+            env["PATH"] = node_path + os.pathsep + env["PATH"]
+        else:
+            env["PATH"] = os.path.join(node_path, "bin") + os.pathsep + env["PATH"]
         
         result = subprocess.run(
             cmd,
